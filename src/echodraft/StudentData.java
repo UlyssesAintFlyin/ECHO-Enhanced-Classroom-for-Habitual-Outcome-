@@ -99,6 +99,7 @@ public class StudentData {
 
     public StudentData(StudentData other) {
         this(other.username, other.surname, other.middleName, other.firstName, other.gender, other.studentNumber, other.age);
+        this.grades = other.grades;
     }
 
 }
@@ -169,7 +170,7 @@ class StudentDatabase {
     }
 
     public static List<StudentData> getAllStudents(String classroomId) {
-        return new ArrayList<>(findRoster(classroomId).students);
+        return findRoster(classroomId).students;
     }
 
     public static void saveStudents(String classroomId) {

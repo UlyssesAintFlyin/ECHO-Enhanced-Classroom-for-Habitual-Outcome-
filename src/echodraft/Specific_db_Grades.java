@@ -39,8 +39,8 @@ public class Specific_db_Grades extends JPanel implements ActionListener {
     JButton addactBttn = new JButton("Add Activity");
     JButton updateBttn = new JButton("Update");
 
-    DefaultTableModel actmod = new DefaultTableModel();
-    JTable table = new JTable(actmod);
+    DefaultTableModel actmod;
+    JTable table;
 
     private MainFrame mainFrame;
     private TeacherData teacherData;
@@ -110,7 +110,7 @@ public class Specific_db_Grades extends JPanel implements ActionListener {
         add(sidepanel, BorderLayout.WEST);
 
         UpperPanel.setBackground(Color.decode("#FFF5DD"));
-        UpperPanel.setPreferredSize(new Dimension(220, 80)); 
+        UpperPanel.setPreferredSize(new Dimension(220, 80));
         UpperPanel.setLayout(new BoxLayout(UpperPanel, BoxLayout.Y_AXIS));
         sidepanel.add(UpperPanel, BorderLayout.NORTH);
 
@@ -230,7 +230,13 @@ public class Specific_db_Grades extends JPanel implements ActionListener {
         Object[][] savedGrades = studentData.getGrades();
         int activityCount = classroomData.getActivityCount();
 
-        DefaultTableModel actmod = new DefaultTableModel();
+        actmod = new DefaultTableModel() {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return column != 0 && column != getColumnCount() - 1;
+            }
+        };
+
         actmod.addColumn("Name");
 
         List<String> activityNames = classroomData.getActivityNames();
@@ -240,7 +246,7 @@ public class Specific_db_Grades extends JPanel implements ActionListener {
             }
         } else {
             for (int i = 1; i <= activityCount; i++) {
-                actmod.addColumn("Activity " + i); 
+                actmod.addColumn("Activity " + i);
             }
         }
 
@@ -250,13 +256,12 @@ public class Specific_db_Grades extends JPanel implements ActionListener {
             Object[] row = new Object[activityCount + 2];
             row[0] = s.getFullName();
 
-            if (savedGrades != null) {
-                for (Object[] oldRow : savedGrades) {
-                    if (oldRow[0].equals(s.getFullName())) {
-                        System.arraycopy(oldRow, 1, row, 1, Math.min(oldRow.length - 2, activityCount));
-                        break;
-                    }
+            Object[][] sGrades = s.getGrades();
+            if (sGrades != null && sGrades.length > 0) {
+                for (int c = 1; c <= activityCount; c++) {
+                    row[c] = sGrades[0][c];
                 }
+                row[row.length - 1] = sGrades[0][row.length - 1]; 
             }
 
             for (int c = 1; c <= activityCount; c++) {
@@ -265,11 +270,12 @@ public class Specific_db_Grades extends JPanel implements ActionListener {
                 }
             }
 
-            row[row.length - 1] = 0; 
+            row[row.length - 1] = 0;
             actmod.addRow(row);
         }
 
-        table = new JTable(actmod);
+        table = new JTable();
+        table.setModel(actmod);
         table.setFont(new Font("Times New Roman", Font.PLAIN, 16));
         table.setRowHeight(25);
         table.getTableHeader().setFont(new Font("Times New Roman", Font.BOLD, 18));
@@ -315,6 +321,7 @@ public class Specific_db_Grades extends JPanel implements ActionListener {
 
         if (e.getSource() == logoutBttn) {
             saveGradesToFile();
+            syncTableToStudentData();
             int x = JOptionPane.showConfirmDialog(null,
                     "Are you sure you want to LOG-OUT of this account?", "WARNING",
                     JOptionPane.YES_NO_OPTION);
@@ -325,20 +332,25 @@ public class Specific_db_Grades extends JPanel implements ActionListener {
 
         if (e.getSource() == classworkBttn) {
             saveGradesToFile();
+            syncTableToStudentData();
             mainFrame.showSpecificDashboardClasswork(classroomData, teacherData, mainFrame);
         }
 
         if (e.getSource() == peopleBttn) {
             saveGradesToFile();
+            syncTableToStudentData();
             mainFrame.showSpecificDashboardPeople(classroomData, teacherData, mainFrame);
         }
 
         if (e.getSource() == lectureBttn) {
             saveGradesToFile();
+            syncTableToStudentData();
             mainFrame.showSpecificDashboardLectures(classroomData, teacherData, mainFrame);
         }
 
         if (e.getSource() == addactBttn) {
+            syncTableToStudentData();
+
             String newActivityName = JOptionPane.showInputDialog(
                     null,
                     "Enter the name of the new activity:",
@@ -352,70 +364,52 @@ public class Specific_db_Grades extends JPanel implements ActionListener {
             }
 
             newActivityName = newActivityName.trim();
-            int newActCount = classroomData.getActivityCount() + 1;
-            classroomData.setActivityCount(newActCount);
 
-            DefaultTableModel newModel = new DefaultTableModel();
+            classroomData.getActivityNames().add(newActivityName);
+            classroomData.setActivityCount(classroomData.getActivityCount() + 1);
+
+            int oldCols = actmod.getColumnCount();
+            int newCols = oldCols + 1;
+
+            DefaultTableModel newModel = new DefaultTableModel() {
+                @Override
+                public boolean isCellEditable(int row, int column) {
+                    return column != 0 && column != getColumnCount() - 1;
+                }
+            };
+
             newModel.addColumn("Name");
 
-            List<String> activityNames = classroomData.getActivityNames();
-            if (activityNames == null) {
-                activityNames = new ArrayList<>();
+            for (String act : classroomData.getActivityNames()) {
+                newModel.addColumn(act);
             }
-            for (String name : activityNames) {
-                newModel.addColumn(name);
-            }
-
-            newModel.addColumn(newActivityName);
-            activityNames.add(newActivityName);
-            classroomData.setActivityNames(activityNames);
 
             newModel.addColumn("Average");
 
-            Object[][] oldGrades = studentData.getGrades();
-            List<StudentData> students = StudentDatabase.getAllStudents(classroomId);
+            for (int r = 0; r < actmod.getRowCount(); r++) {
+                Object[] newRow = new Object[newCols];
 
-            for (StudentData s : students) {
-                Object[] newRow = new Object[newActCount + 2];
-                newRow[0] = s.getFullName();
+                newRow[0] = actmod.getValueAt(r, 0);
 
-                if (oldGrades != null) {
-                    for (Object[] oldRow : oldGrades) {
-                        if (oldRow[0].equals(s.getFullName())) {
-                            System.arraycopy(oldRow, 1, newRow, 1, Math.min(oldRow.length - 2, newRow.length - 2));
-                            break;
-                        }
-                    }
+                for (int c = 1; c < oldCols - 1; c++) {
+                    newRow[c] = actmod.getValueAt(r, c);
                 }
 
-                for (int c = 1; c < newRow.length - 1; c++) {
-                    if (newRow[c] == null) {
-                        newRow[c] = "";
-                    }
-                }
+                newRow[oldCols - 1] = "";
 
-                newRow[newRow.length - 1] = 0; 
+                newRow[newCols - 1] = actmod.getValueAt(r, oldCols - 1);
+
                 newModel.addRow(newRow);
             }
 
             actmod = newModel;
             table.setModel(actmod);
 
-            int rowCount = actmod.getRowCount();
-            int colCount = actmod.getColumnCount();
-            Object[][] updatedGrades = new Object[rowCount][colCount];
-
-            for (int r = 0; r < rowCount; r++) {
-                for (int c = 0; c < colCount; c++) {
-                    updatedGrades[r][c] = actmod.getValueAt(r, c);
-                }
-            }
-
-            studentData.setGrades(updatedGrades);
-
+            syncTableToStudentData();
         }
 
         if (e.getSource() == updateBttn) {
+            syncTableToStudentData();
             int rowCount = table.getRowCount();
             int colCount = table.getColumnCount();
 
@@ -475,7 +469,7 @@ public class Specific_db_Grades extends JPanel implements ActionListener {
                     table.setRowSelectionInterval(row, row);
                     table.scrollRectToVisible(new Rectangle(table.getCellRect(row, 0, true)));
                     found = true;
-                    break; 
+                    break;
                 }
             }
 
@@ -483,59 +477,6 @@ public class Specific_db_Grades extends JPanel implements ActionListener {
                 JOptionPane.showMessageDialog(null, "Student not found!", "Not Found", JOptionPane.INFORMATION_MESSAGE);
             }
         }
-    }
-
-    private void refreshGradesTable() {
-        String classroomId = String.valueOf(classroomData.getClassroomID());
-        StudentDatabase.bubbleSortBySurname(classroomId);
-        List<StudentData> students = StudentDatabase.getAllStudents(classroomId);
-
-        List<String> activityNames = classroomData.getActivityNames();
-        Object[][] savedGrades = studentData.getGrades();
-
-        DefaultTableModel newModel = new DefaultTableModel();
-        newModel.addColumn("Name");
-
-        for (String actName : activityNames) {
-            newModel.addColumn(actName);
-        }
-
-        newModel.addColumn("Average");
-
-        for (StudentData s : students) {
-            Object[] row = new Object[activityNames.size() + 2];
-            row[0] = s.getFullName();
-
-            for (int i = 1; i < row.length; i++) {
-                row[i] = "";
-            }
-
-            if (savedGrades != null) {
-                for (Object[] oldRow : savedGrades) {
-                    if (oldRow[0].equals(s.getFullName())) {
-
-                        for (int col = 0; col < activityNames.size(); col++) {
-                            String actName = activityNames.get(col);
-
-                            for (int oldCol = 1; oldCol < oldRow.length - 1; oldCol++) {
-                                if (actName.equals(classroomData.getActivityNames().get(oldCol - 1))) {
-                                    row[col + 1] = oldRow[oldCol];
-                                    break;
-                                }
-                            }
-                        }
-
-                        row[row.length - 1] = oldRow[oldRow.length - 1];
-                        break;
-                    }
-                }
-            }
-
-            newModel.addRow(row);
-        }
-
-        actmod = newModel;
-        table.setModel(actmod);
     }
 
     private void saveGradesToFile() {
@@ -558,6 +499,29 @@ public class Specific_db_Grades extends JPanel implements ActionListener {
             }
         } catch (IOException e) {
             e.printStackTrace();
+        }
+    }
+
+    private void syncTableToStudentData() {
+        if (table.isEditing()) {
+            table.getCellEditor().stopCellEditing();
+        }
+
+        String classroomId = String.valueOf(classroomData.getClassroomID());
+        List<StudentData> students = StudentDatabase.getAllStudents(classroomId);
+
+        int rowCount = table.getRowCount();
+        int colCount = table.getColumnCount();
+
+        for (int r = 0; r < rowCount; r++) {
+            StudentData s = students.get(r);
+
+            Object[][] rowGrades = new Object[1][colCount];
+            for (int c = 0; c < colCount; c++) {
+                rowGrades[0][c] = table.getValueAt(r, c);
+            }
+
+            s.setGrades(rowGrades);
         }
     }
 
