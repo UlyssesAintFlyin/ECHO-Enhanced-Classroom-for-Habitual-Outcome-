@@ -3,11 +3,11 @@ To provide a centralized academic tool for excellent instruction, this program a
 This application utilizes Java Programming Language.
 
 ## 📸 Program Screenshots
-![Account Creation](src/echo/enhanced/classroom/pkgfor/habitual/outcome/echodraft/Screenshots/01-account-creation.png)
-![Login Page](src/echo/enhanced/classroom/pkgfor/habitual/outcome/echodraft/Screenshots/02-login-page.png)
-![Classroom Dashboard](src/echo/enhanced/classroom/pkgfor/habitual/outcome/echodraft/Screenshots/03-classroom-dashboard.png)
-![Create Class](src/echo/enhanced/classroom/pkgfor/habitual/outcome/echodraft/Screenshots/04-create-class.png)
-![Edit Class](src/echo/enhanced/classroom/pkgfor/habitual/outcome/echodraft/Screenshots/05-edit-class.png)
+![Account Creation](ECHO-Enhanced-Classroom-for-Habitual-Outcome-/src/echodraft/Screenshots/01-account-creation.png)
+![Login Page](ECHO-Enhanced-Classroom-for-Habitual-Outcome-/src/echodraft/Screenshots/02-login-page.png)
+![Classroom Dashboard](ECHO-Enhanced-Classroom-for-Habitual-Outcome-/src/echodraft/Screenshots/03-classroom-dashboard.png)
+![Create Class](ECHO-Enhanced-Classroom-for-Habitual-Outcome-/src/echodraft/Screenshots/04-create-class.png)
+![Edit Class](ECHO-Enhanced-Classroom-for-Habitual-Outcome-/src/echodraft/Screenshots/05-edit-class.png)
 ![Delete Class](src/echo/enhanced/classroom/pkgfor/habitual/outcome/echodraft/Screenshots/06-delete-class.png)
 ![Lecture Dashboard](src/echo/enhanced/classroom/pkgfor/habitual/outcome/echodraft/Screenshots/07-lecture-dashboard.png)
 ![Create Lecture](src/echo/enhanced/classroom/pkgfor/habitual/outcome/echodraft/Screenshots/08-create-lecture.png)
